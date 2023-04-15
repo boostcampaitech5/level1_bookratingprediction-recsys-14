@@ -11,7 +11,6 @@ class FeaturesEmbedding(nn.Module):
         self.offsets = np.array((0, *np.cumsum(field_dims)[:-1]), dtype=np.int32)
         torch.nn.init.xavier_uniform_(self.embedding.weight.data)
 
-
     def forward(self, x: torch.Tensor):
         x = x + x.new_tensor(self.offsets).unsqueeze(0)
         return self.embedding(x)
@@ -33,7 +32,6 @@ class MultiLayerPerceptron(nn.Module):
             layers.append(torch.nn.Linear(input_dim, 1))
         self.mlp = torch.nn.Sequential(*layers)
 
-
     def forward(self, x):
         return self.mlp(x)
 
@@ -43,14 +41,15 @@ class MultiLayerPerceptron(nn.Module):
 class NeuralCollaborativeFiltering(nn.Module):
     def __init__(self, args, data):
         super().__init__()
-        self.field_dims = data['field_dims']
-        self.user_field_idx = np.array((0, ), dtype=np.int32)
-        self.item_field_idx = np.array((1, ), dtype=np.int32)
+        self.field_dims = data["field_dims"]
+        self.user_field_idx = np.array((0,), dtype=np.int32)
+        self.item_field_idx = np.array((1,), dtype=np.int32)
         self.embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
         self.embed_output_dim = len(self.field_dims) * args.embed_dim
-        self.mlp = MultiLayerPerceptron(self.embed_output_dim, args.mlp_dims, args.dropout, output_layer=False)
+        self.mlp = MultiLayerPerceptron(
+            self.embed_output_dim, args.mlp_dims, args.dropout, output_layer=False
+        )
         self.fc = torch.nn.Linear(args.mlp_dims[-1] + args.embed_dim, 1)
-
 
     def forward(self, x):
         x = self.embedding(x)

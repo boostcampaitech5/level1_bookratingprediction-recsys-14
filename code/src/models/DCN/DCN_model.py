@@ -11,7 +11,6 @@ class FeaturesEmbedding(nn.Module):
         self.offsets = np.array((0, *np.cumsum(field_dims)[:-1]), dtype=np.int32)
         torch.nn.init.xavier_uniform_(self.embedding.weight.data)
 
-
     def forward(self, x: torch.Tensor):
         x = x + x.new_tensor(self.offsets).unsqueeze(0)
         return self.embedding(x)
@@ -22,13 +21,12 @@ class CrossNetwork(nn.Module):
     def __init__(self, input_dim: int, num_layers: int):
         super().__init__()
         self.num_layers = num_layers
-        self.w = torch.nn.ModuleList([
-            torch.nn.Linear(input_dim, 1, bias=False) for _ in range(num_layers)
-        ])
-        self.b = torch.nn.ParameterList([
-            torch.nn.Parameter(torch.zeros((input_dim,))) for _ in range(num_layers)
-        ])
-
+        self.w = torch.nn.ModuleList(
+            [torch.nn.Linear(input_dim, 1, bias=False) for _ in range(num_layers)]
+        )
+        self.b = torch.nn.ParameterList(
+            [torch.nn.Parameter(torch.zeros((input_dim,))) for _ in range(num_layers)]
+        )
 
     def forward(self, x: torch.Tensor):
         x0 = x
@@ -54,7 +52,6 @@ class MultiLayerPerceptron(nn.Module):
             layers.append(torch.nn.Linear(input_dim, 1))
         self.mlp = torch.nn.Sequential(*layers)
 
-
     def forward(self, x):
         return self.mlp(x)
 
@@ -63,13 +60,14 @@ class MultiLayerPerceptron(nn.Module):
 class DeepCrossNetworkModel(nn.Module):
     def __init__(self, args, data):
         super().__init__()
-        self.field_dims = data['field_dims']
+        self.field_dims = data["field_dims"]
         self.embedding = FeaturesEmbedding(self.field_dims, args.embed_dim)
         self.embed_output_dim = len(self.field_dims) * args.embed_dim
         self.cn = CrossNetwork(self.embed_output_dim, args.num_layers)
-        self.mlp = MultiLayerPerceptron(self.embed_output_dim, args.mlp_dims, args.dropout, output_layer=False)
+        self.mlp = MultiLayerPerceptron(
+            self.embed_output_dim, args.mlp_dims, args.dropout, output_layer=False
+        )
         self.cd_linear = nn.Linear(args.mlp_dims[0], 1, bias=False)
-
 
     def forward(self, x: torch.Tensor):
         embed_x = self.embedding(x).view(-1, self.embed_output_dim)
