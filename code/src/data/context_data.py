@@ -131,6 +131,27 @@ def get_country_data(users, fill_na: str='unitedstatesofamerica'):
 
     return country_list
 
+def get_language_data(books):
+    isbn_dict = {
+        '0': 'en',
+        '1': 'en',
+        '2': 'fr',
+        '3': 'de',
+        '4': 'ja',
+        '5': 'en',
+        '6': 'en',
+        '7': 'zh-CN',
+        '8': 'es',
+        '9': 'es',
+        'B': 'en',
+    }
+
+    na_book_list = books[books['language'].isna()]
+    guessed_book_list = na_book_list['isbn'].apply(lambda x: x[0]).map(isbn_dict)
+    book_list = books['language'].combine(guessed_book_list, lambda x, y: y if type(x)==float else x)
+
+    return book_list
+
 def process_context_data(users, books, ratings1, ratings2):
     """
     Parameters
@@ -220,6 +241,8 @@ def context_data_load(args):
     train = pd.read_csv(args.data_path + 'train_ratings.csv')
     test = pd.read_csv(args.data_path + 'test_ratings.csv')
     sub = pd.read_csv(args.data_path + 'sample_submission.csv')
+
+    books['language'] = get_language_data(books)
 
     ids = pd.concat([train['user_id'], sub['user_id']]).unique()
     isbns = pd.concat([train['isbn'], sub['isbn']]).unique()
