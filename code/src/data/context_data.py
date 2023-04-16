@@ -20,6 +20,117 @@ def age_map(x: int) -> int:
     else:
         return 6
 
+def get_country_data(users, fill_na: str='unitedstatesofamerica'):
+    """
+    Parameters
+    ----------
+    users : pd.DataFrame
+        users.csv를 인덱싱한 데이터
+    fill_na : str
+        users 중 country를 모르는(Nan) 값을 채울 문자열
+    """
+
+    trans_dict = {
+        'alachua': 'unitedstatesofamerica',
+        'alderney' : 'unitedkingdom',
+        'america': 'unitedstatesofamerica',
+        'aroostook': 'unitedstatesofamerica',
+        'bergued': 'spain',
+        'bermuda': 'unitedkingdom',
+        'c': 'na',
+        'ca': 'belize',
+        'camden': 'unitedstatesofamerica',
+        'cananda': 'canada',
+        'catalonia': 'spain',
+        'catalunya': 'spain',
+        'catalunyaspain': 'spain',
+        'caymanislands': 'unitedkingdom',
+        'channelislands': 'unitedkingdom',
+        'cherokee': 'unitedstatesofamerica',
+        'csa': 'unitedstatesofamerica',
+        'deutschland': 'germany',
+        'disgruntledstatesofamerica': 'unitedstatesofamerica',
+        'espaa': 'spain',
+        'euskalherria': 'spain',
+        'everywhereandanywhere': 'na',
+        'faraway': 'na',
+        'ferrara': 'italy',
+        'fortbend': 'unitedstatesofamerica',
+        'framingham': 'unitedstatesofamerica',
+        'galiza': 'spain',
+        'guam': 'unitedstatesofamerica',
+        'guernsey': 'unitedkingdom',
+        'hereandthere': 'na',
+        'italia': 'italy',
+        'k1c7b1': 'canada',
+        'kern': 'unitedstatesofamerica',
+        'kuwait': 'unitedkingdom',
+        'labelgique': 'belgium',
+        'lachineternelle': 'na',
+        'lafrance': 'france',
+        'lasuisse': 'switzerland',
+        'litalia': 'italy',
+        'lkjlj': 'canada',
+        'lleida': 'spain',
+        'losestadosunidosdenorteamerica': 'unitedstatesofamerica',
+        'maracopa': 'unitedstatesofamerica',
+        'maricopa': 'unitedstatesofamerica',
+        'morgan': 'unitedstatesofamerica',
+        'naontheroad': 'na',
+        'nz': 'newzealand',
+        'orangeco': 'unitedstatesofamerica',
+        'orense': 'spain',
+        'pender': 'unitedstatesofamerica',
+        'petrolwarnation': 'unitedstatesofamerica',
+        'phillipines': 'philipines',
+        'polk': 'unitedstatesofamerica',
+        'puertorico': 'unitedstatesofamerica',
+        'quit': 'na',
+        'republicofpanama': 'panama',
+        'richmondcountry': 'unitedstatesofamerica',
+        'rutherford': 'unitedstatesofamerica',
+        'saintloius': 'unitedstatesofamerica',
+        'shelby': 'unitedstatesofamerica',
+        'space': 'na',
+        'sthelena': 'unitedkingdom',
+        'stthomasi': 'unitedstatesofamerica',
+        'tdzimi': 'na',
+        'theworldtomorrow': 'na',
+        'tobago': 'trinidadandtobago',
+        'ua': 'unitedstatesofamerica',
+        'uae': 'unitedarabemirates',
+        'uk': 'unitedkingdom',
+        'unitedsates': 'unitedstatesofamerica',
+        'unitedstaes': 'unitedstatesofamerica',
+        'unitedstate': 'unitedstatesofamerica',
+        'unitedstates': 'unitedstatesofamerica',
+        'universe': 'na',
+        'unknown': 'na',
+        'urugua': 'uruguay',
+        'us': 'unitedstatesofamerica',
+        'usa': 'unitedstatesofamerica',
+        'usacanada': 'unitedstatesofamerica',
+        'usacurrentlylivinginengland': 'unitedstatesofamerica',
+        'usofa': 'unitedstatesofamerica',
+        'vanwert': 'unitedstatesofamerica',
+        'worcester': 'england',
+        'ysa': 'unitedstatesofamerica',
+    }
+
+    def get_unchanged(first_str, second_str):
+        if type(second_str) == float:
+            return first_str
+        return second_str
+
+    temp_list = users['location'].apply(lambda x: x.split(sep=',')[-1])
+    country_list = temp_list.str.replace('[^0-9a-zA-Z]', '', regex=True)
+
+    country_list = country_list.combine(country_list.map(trans_dict, na_action='ignore'), get_unchanged)
+
+    country_list = country_list.apply(lambda x: fill_na if x == '' or x == 'na' else x)
+
+    return country_list
+
 def process_context_data(users, books, ratings1, ratings2):
     """
     Parameters
@@ -37,7 +148,8 @@ def process_context_data(users, books, ratings1, ratings2):
 
     users['location_city'] = users['location'].apply(lambda x: x.split(',')[0])
     users['location_state'] = users['location'].apply(lambda x: x.split(',')[1])
-    users['location_country'] = users['location'].apply(lambda x: x.split(',')[2])
+    # users['location_country'] = users['location'].apply(lambda x: x.split(',')[2])
+    users['location_country'] = get_country_data(users)
     users = users.drop(['location'], axis=1)
 
     ratings = pd.concat([ratings1, ratings2]).reset_index(drop=True)
