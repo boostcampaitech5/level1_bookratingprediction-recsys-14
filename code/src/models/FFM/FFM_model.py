@@ -34,7 +34,7 @@ class FieldAwareFactorizationMachine(nn.Module):
             torch.nn.init.xavier_uniform_(embedding.weight.data)
 
     def forward(self, x: torch.Tensor):
-        x = x + x.new_tensor(self.offsets, dtype=np.int32).unsqueeze(0)
+        x = x + x.new_tensor(self.offsets, dtype=torch.int32).unsqueeze(0)
         xs = [self.embeddings[i](x) for i in range(self.num_fields)]
         ix = list()
         for i in range(self.num_fields - 1):
