@@ -19,6 +19,157 @@ def age_map(x: int) -> int:
         return 5
     else:
         return 6
+    
+def random_imputation(
+        df: pd.DataFrame, col: str = 'age'
+) -> pd.DataFrame:
+    """
+    Parameters
+    ----------
+    df : pd.DataFrame
+        imputation 할 data
+    col : str
+        df 중 random imputation 할 column
+    """
+
+    imputed_df = (df[col].dropna().sample(df[col].isnull().sum()))
+    imputed_df.index = df[lambda x: x[col].isnull()].index
+    df.loc[df[col].isnull(), col] = imputed_df
+
+    return df
+
+
+def get_country_data(users, fill_na: str='unitedstatesofamerica'):
+    """
+    Parameters
+    ----------
+    users : pd.DataFrame
+        users.csv를 인덱싱한 데이터
+    fill_na : str
+        users 중 country를 모르는(Nan) 값을 채울 문자열
+    """
+
+    trans_dict = {
+        'alachua': 'unitedstatesofamerica',
+        'alderney' : 'unitedkingdom',
+        'america': 'unitedstatesofamerica',
+        'aroostook': 'unitedstatesofamerica',
+        'bergued': 'spain',
+        'bermuda': 'unitedkingdom',
+        'c': 'na',
+        'ca': 'belize',
+        'camden': 'unitedstatesofamerica',
+        'cananda': 'canada',
+        'catalonia': 'spain',
+        'catalunya': 'spain',
+        'catalunyaspain': 'spain',
+        'caymanislands': 'unitedkingdom',
+        'channelislands': 'unitedkingdom',
+        'cherokee': 'unitedstatesofamerica',
+        'csa': 'unitedstatesofamerica',
+        'deutschland': 'germany',
+        'disgruntledstatesofamerica': 'unitedstatesofamerica',
+        'espaa': 'spain',
+        'euskalherria': 'spain',
+        'everywhereandanywhere': 'na',
+        'faraway': 'na',
+        'ferrara': 'italy',
+        'fortbend': 'unitedstatesofamerica',
+        'framingham': 'unitedstatesofamerica',
+        'galiza': 'spain',
+        'guam': 'unitedstatesofamerica',
+        'guernsey': 'unitedkingdom',
+        'hereandthere': 'na',
+        'italia': 'italy',
+        'k1c7b1': 'canada',
+        'kern': 'unitedstatesofamerica',
+        'kuwait': 'unitedkingdom',
+        'labelgique': 'belgium',
+        'lachineternelle': 'na',
+        'lafrance': 'france',
+        'lasuisse': 'switzerland',
+        'litalia': 'italy',
+        'lkjlj': 'canada',
+        'lleida': 'spain',
+        'losestadosunidosdenorteamerica': 'unitedstatesofamerica',
+        'maracopa': 'unitedstatesofamerica',
+        'maricopa': 'unitedstatesofamerica',
+        'morgan': 'unitedstatesofamerica',
+        'naontheroad': 'na',
+        'nz': 'newzealand',
+        'orangeco': 'unitedstatesofamerica',
+        'orense': 'spain',
+        'pender': 'unitedstatesofamerica',
+        'petrolwarnation': 'unitedstatesofamerica',
+        'phillipines': 'philipines',
+        'polk': 'unitedstatesofamerica',
+        'puertorico': 'unitedstatesofamerica',
+        'quit': 'na',
+        'republicofpanama': 'panama',
+        'richmondcountry': 'unitedstatesofamerica',
+        'rutherford': 'unitedstatesofamerica',
+        'saintloius': 'unitedstatesofamerica',
+        'shelby': 'unitedstatesofamerica',
+        'space': 'na',
+        'sthelena': 'unitedkingdom',
+        'stthomasi': 'unitedstatesofamerica',
+        'tdzimi': 'na',
+        'theworldtomorrow': 'na',
+        'tobago': 'trinidadandtobago',
+        'ua': 'unitedstatesofamerica',
+        'uae': 'unitedarabemirates',
+        'uk': 'unitedkingdom',
+        'unitedsates': 'unitedstatesofamerica',
+        'unitedstaes': 'unitedstatesofamerica',
+        'unitedstate': 'unitedstatesofamerica',
+        'unitedstates': 'unitedstatesofamerica',
+        'universe': 'na',
+        'unknown': 'na',
+        'urugua': 'uruguay',
+        'us': 'unitedstatesofamerica',
+        'usa': 'unitedstatesofamerica',
+        'usacanada': 'unitedstatesofamerica',
+        'usacurrentlylivinginengland': 'unitedstatesofamerica',
+        'usofa': 'unitedstatesofamerica',
+        'vanwert': 'unitedstatesofamerica',
+        'worcester': 'england',
+        'ysa': 'unitedstatesofamerica',
+    }
+
+    def get_unchanged(first_str, second_str):
+        if type(second_str) == float:
+            return first_str
+        return second_str
+
+    temp_list = users['location'].apply(lambda x: x.split(sep=',')[-1])
+    country_list = temp_list.str.replace('[^0-9a-zA-Z]', '', regex=True)
+
+    country_list = country_list.combine(country_list.map(trans_dict, na_action='ignore'), get_unchanged)
+
+    country_list = country_list.apply(lambda x: fill_na if x == '' or x == 'na' else x)
+
+    return country_list
+
+def get_language_data(books):
+    isbn_dict = {
+        '0': 'en',
+        '1': 'en',
+        '2': 'fr',
+        '3': 'de',
+        '4': 'ja',
+        '5': 'en',
+        '6': 'en',
+        '7': 'zh-CN',
+        '8': 'es',
+        '9': 'es',
+        'B': 'en',
+    }
+
+    na_book_list = books[books['language'].isna()]
+    guessed_book_list = na_book_list['isbn'].apply(lambda x: x[0]).map(isbn_dict)
+    book_list = books['language'].combine(guessed_book_list, lambda x, y: y if type(x)==float else x)
+
+    return book_list
 
 def process_context_data(users, books, ratings1, ratings2):
     """
@@ -37,7 +188,8 @@ def process_context_data(users, books, ratings1, ratings2):
 
     users['location_city'] = users['location'].apply(lambda x: x.split(',')[0])
     users['location_state'] = users['location'].apply(lambda x: x.split(',')[1])
-    users['location_country'] = users['location'].apply(lambda x: x.split(',')[2])
+    # users['location_country'] = users['location'].apply(lambda x: x.split(',')[2])
+    users['location_country'] = get_country_data(users)
     users = users.drop(['location'], axis=1)
 
     ratings = pd.concat([ratings1, ratings2]).reset_index(drop=True)
@@ -59,10 +211,17 @@ def process_context_data(users, books, ratings1, ratings2):
     test_df['location_state'] = test_df['location_state'].map(loc_state2idx)
     test_df['location_country'] = test_df['location_country'].map(loc_country2idx)
 
-    train_df['age'] = train_df['age'].fillna(int(train_df['age'].mean()))
+    # train_df['age'] = train_df['age'].fillna(int(train_df['age'].mean()))
+    # train_df['age'] = train_df['age'].apply(age_map)
+    # test_df['age'] = test_df['age'].fillna(int(test_df['age'].mean()))
+    # test_df['age'] = test_df['age'].apply(age_map)
+
+    # Using random_imputation()
+    train_df = random_imputation(train_df, 'age')
     train_df['age'] = train_df['age'].apply(age_map)
-    test_df['age'] = test_df['age'].fillna(int(test_df['age'].mean()))
+    test_df = random_imputation(test_df, 'age')
     test_df['age'] = test_df['age'].apply(age_map)
+    
 
     # book 파트 인덱싱
     category2idx = {v:k for k,v in enumerate(context_df['category'].unique())}
@@ -108,6 +267,8 @@ def context_data_load(args):
     train = pd.read_csv(args.data_path + 'train_ratings.csv')
     test = pd.read_csv(args.data_path + 'test_ratings.csv')
     sub = pd.read_csv(args.data_path + 'sample_submission.csv')
+
+    books['language'] = get_language_data(books)
 
     ids = pd.concat([train['user_id'], sub['user_id']]).unique()
     isbns = pd.concat([train['isbn'], sub['isbn']]).unique()
