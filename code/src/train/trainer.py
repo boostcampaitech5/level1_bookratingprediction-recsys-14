@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import tqdm
 import torch
@@ -18,13 +19,23 @@ class RMSELoss(nn.Module):
 
 
 def train(args, model, dataloader, logger, setting):
-    minimum_loss = 999999999
     if args.loss_fn == "MSE":
         loss_fn = MSELoss()
     elif args.loss_fn == "RMSE":
         loss_fn = RMSELoss()
     else:
         pass
+
+    if args.model == "XGB":
+        model.fit(dataloader["X_train"], dataloader["y_train"])
+        valid_loss = valid(args, model, dataloader, loss_fn)
+        
+        print(f"valid_loss: {valid_loss:.3f}")
+
+        return model
+    
+    minimum_loss = 999999999
+    
     if args.optimizer == "SGD":
         optimizer = SGD(model.parameters(), lr=args.lr)
     elif args.optimizer == "ADAM":
@@ -77,6 +88,15 @@ def train(args, model, dataloader, logger, setting):
 
 
 def valid(args, model, dataloader, loss_fn):
+    if args.model == "XGB":
+        def rmse(real: list, predict: list) -> float:
+            pred = np.array(predict)
+            return np.sqrt(np.mean((real - pred) ** 2))
+
+        y_hat = model.predict(dataloader['X_valid'])
+
+        return rmse(y_hat, dataloader['y_valid'])
+
     model.eval()
     total_loss = 0
     batch = 0
@@ -104,6 +124,10 @@ def valid(args, model, dataloader, loss_fn):
 
 
 def test(args, model, dataloader, setting):
+    if args.model == "XGB":
+        predicts = model.predict(dataloader["test"])
+        return predicts
+
     predicts = list()
     if args.use_best_model == True:
         model.load_state_dict(

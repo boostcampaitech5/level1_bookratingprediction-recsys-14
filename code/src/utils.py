@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import logging
 import json
+import xgboost as xgb
+
 from .models import *
 
 
@@ -49,6 +51,13 @@ def models_load(args, data):
         model = CNN_FM(args, data).to(args.device)
     elif args.model == "DeepCoNN":
         model = DeepCoNN(args, data).to(args.device)
+    elif args.model == "XGB":
+        model = xgb.XGBRegressor(
+            n_estimators=args.n_estimators, learning_rate=args.lr,
+            gamma=args.gamma, subsample=args.subsample,
+            colsample_bytree=args.colsample_bytree, max_depth=args.max_depth
+        )
+
     else:
         raise ValueError(
             "MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN]"

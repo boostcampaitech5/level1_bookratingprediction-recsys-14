@@ -6,6 +6,7 @@ from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
+from src.data import custom_data_load, custom_data_split, custom_data_loader
 from src.train import train, test
 
 
@@ -25,6 +26,8 @@ def main(args):
 
         nltk.download("punkt")
         data = text_data_load(args)
+    elif args.model == "XGB":
+        data = custom_data_load(args)
     else:
         pass
 
@@ -45,6 +48,11 @@ def main(args):
     elif args.model == "DeepCoNN":
         data = text_data_split(args, data)
         data = text_data_loader(args, data)
+
+    elif args.model == "XGB":
+        data = custom_data_split(args, data)
+        data = custom_data_loader(args, data)
+
     else:
         pass
 
@@ -72,7 +80,7 @@ def main(args):
     ######################## SAVE PREDICT
     print(f"--------------- SAVE {args.model} PREDICT ---------------")
     submission = pd.read_csv(args.data_path + "sample_submission.csv")
-    if args.model in ("FM", "FFM", "NCF", "WDN", "DCN", "CNN_FM", "DeepCoNN"):
+    if args.model in ("FM", "FFM", "NCF", "WDN", "DCN", "CNN_FM", "DeepCoNN", "XGB"):
         submission["rating"] = predicts
     else:
         pass
@@ -87,7 +95,7 @@ if __name__ == "__main__":
     arg = parser.add_argument
 
     ############### BASIC OPTION
-    arg("--data_path", type=str, default="/opt/ml/data/", help="Data path를 설정할 수 있습니다.")
+    arg("--data_path", type=str, default="/opt/ml/level1_bookratingprediction-recsys-14/data/", help="Data path를 설정할 수 있습니다.")
     arg(
         "--saved_model_path",
         type=str,
@@ -97,7 +105,7 @@ if __name__ == "__main__":
     arg(
         "--model",
         type=str,
-        choices=["FM", "FFM", "NCF", "WDN", "DCN", "CNN_FM", "DeepCoNN"],
+        choices=["FM", "FFM", "NCF", "WDN", "DCN", "CNN_FM", "DeepCoNN", "XGB"],
         help="학습 및 예측할 모델을 선택할 수 있습니다.",
     )
     arg("--data_shuffle", type=bool, default=True, help="데이터 셔플 여부를 조정할 수 있습니다.")
@@ -227,6 +235,38 @@ if __name__ == "__main__":
         type=int,
         default=32,
         help="DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.",
+    )
+
+    ############### XGBoost
+    arg(
+        "--n_estimators",
+        type=int,
+        default=400,
+        help="XGBoost에서 n_estimators 설정",
+    )
+    arg(
+        "--gamma",
+        type=int,
+        default=0,
+        help="XGBoost에서 gamma 설정",
+    )
+    arg(
+        "--subsample",
+        type=float,
+        default=0.8,
+        help="XGBoost에서 subsample 설정",
+    )
+    arg(
+        "--max_depth",
+        type=int,
+        default=15,
+        help="XGBoost에서 max_depth 설정",
+    )
+    arg(
+        "--colsample_bytree",
+        type=float,
+        default=0.5,
+        help="XGBoost에서 colsample_bytree 설정",
     )
 
     args = parser.parse_args()
