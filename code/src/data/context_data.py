@@ -22,6 +22,31 @@ def age_map(x: int) -> int:
         return 6
 
 
+def gaussian_imputation(
+    series: pd.Series, lower: float = 0.0, upper: float = 100.0
+) -> pd.Series:
+    """Imputate missing values by sampling from gaussain distribution.
+
+    Arg:
+        series (pd.Series): Target series that contains missing values.
+        lower (float): Lower bound of smpaling values.
+        upper (float): Upper bound of sampling values.
+
+    Return:
+        imputed_series (pd.Series): Imputed result of target series.
+    """
+    imputed_series = series.copy()
+    mu, sigma = series.mean(), series.std()
+    trunc_gaussian = stats.truncnorm(
+        (lower - mu) / sigma, (upper - mu) / sigma, loc=mu, scale=sigma
+    )
+    imputed_series[imputed_series.isna()] = (
+        trunc_gaussian.rvs(series.isna().sum()).astype(int).astype(float)
+    )
+
+    return imputed_series
+
+
 def get_country_data(users, fill_na: str = "unitedstatesofamerica"):
     """
     Parameters
