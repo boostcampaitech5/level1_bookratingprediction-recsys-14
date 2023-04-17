@@ -95,7 +95,12 @@ if __name__ == "__main__":
     arg = parser.add_argument
 
     ############### BASIC OPTION
-    arg("--data_path", type=str, default="/opt/ml/level1_bookratingprediction-recsys-14/data/", help="Data path를 설정할 수 있습니다.")
+    arg(
+        "--data_path",
+        type=str,
+        default="/opt/ml/level1_bookratingprediction-recsys-14/data/",
+        help="Data path를 설정할 수 있습니다.",
+    )
     arg(
         "--saved_model_path",
         type=str,

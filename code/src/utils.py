@@ -53,9 +53,12 @@ def models_load(args, data):
         model = DeepCoNN(args, data).to(args.device)
     elif args.model == "XGB":
         model = xgb.XGBRegressor(
-            n_estimators=args.n_estimators, learning_rate=args.lr,
-            gamma=args.gamma, subsample=args.subsample,
-            colsample_bytree=args.colsample_bytree, max_depth=args.max_depth
+            n_estimators=args.n_estimators,
+            learning_rate=args.lr,
+            gamma=args.gamma,
+            subsample=args.subsample,
+            colsample_bytree=args.colsample_bytree,
+            max_depth=args.max_depth,
         )
 
     else:

@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 
+
 def age_map(x: int) -> int:
     x = int(x)
     if x < 20:
@@ -20,7 +21,8 @@ def age_map(x: int) -> int:
     else:
         return 6
 
-def get_country_data(users, fill_na: str='unitedstatesofamerica'):
+
+def get_country_data(users, fill_na: str = "unitedstatesofamerica"):
     """
     Parameters
     ----------
@@ -31,90 +33,90 @@ def get_country_data(users, fill_na: str='unitedstatesofamerica'):
     """
 
     trans_dict = {
-        'alachua': 'unitedstatesofamerica',
-        'alderney' : 'unitedkingdom',
-        'america': 'unitedstatesofamerica',
-        'aroostook': 'unitedstatesofamerica',
-        'bergued': 'spain',
-        'bermuda': 'unitedkingdom',
-        'c': 'na',
-        'ca': 'belize',
-        'camden': 'unitedstatesofamerica',
-        'cananda': 'canada',
-        'catalonia': 'spain',
-        'catalunya': 'spain',
-        'catalunyaspain': 'spain',
-        'caymanislands': 'unitedkingdom',
-        'channelislands': 'unitedkingdom',
-        'cherokee': 'unitedstatesofamerica',
-        'csa': 'unitedstatesofamerica',
-        'deutschland': 'germany',
-        'disgruntledstatesofamerica': 'unitedstatesofamerica',
-        'espaa': 'spain',
-        'euskalherria': 'spain',
-        'everywhereandanywhere': 'na',
-        'faraway': 'na',
-        'ferrara': 'italy',
-        'fortbend': 'unitedstatesofamerica',
-        'framingham': 'unitedstatesofamerica',
-        'galiza': 'spain',
-        'guam': 'unitedstatesofamerica',
-        'guernsey': 'unitedkingdom',
-        'hereandthere': 'na',
-        'italia': 'italy',
-        'k1c7b1': 'canada',
-        'kern': 'unitedstatesofamerica',
-        'kuwait': 'unitedkingdom',
-        'labelgique': 'belgium',
-        'lachineternelle': 'na',
-        'lafrance': 'france',
-        'lasuisse': 'switzerland',
-        'litalia': 'italy',
-        'lkjlj': 'canada',
-        'lleida': 'spain',
-        'losestadosunidosdenorteamerica': 'unitedstatesofamerica',
-        'maracopa': 'unitedstatesofamerica',
-        'maricopa': 'unitedstatesofamerica',
-        'morgan': 'unitedstatesofamerica',
-        'naontheroad': 'na',
-        'nz': 'newzealand',
-        'orangeco': 'unitedstatesofamerica',
-        'orense': 'spain',
-        'pender': 'unitedstatesofamerica',
-        'petrolwarnation': 'unitedstatesofamerica',
-        'phillipines': 'philipines',
-        'polk': 'unitedstatesofamerica',
-        'puertorico': 'unitedstatesofamerica',
-        'quit': 'na',
-        'republicofpanama': 'panama',
-        'richmondcountry': 'unitedstatesofamerica',
-        'rutherford': 'unitedstatesofamerica',
-        'saintloius': 'unitedstatesofamerica',
-        'shelby': 'unitedstatesofamerica',
-        'space': 'na',
-        'sthelena': 'unitedkingdom',
-        'stthomasi': 'unitedstatesofamerica',
-        'tdzimi': 'na',
-        'theworldtomorrow': 'na',
-        'tobago': 'trinidadandtobago',
-        'ua': 'unitedstatesofamerica',
-        'uae': 'unitedarabemirates',
-        'uk': 'unitedkingdom',
-        'unitedsates': 'unitedstatesofamerica',
-        'unitedstaes': 'unitedstatesofamerica',
-        'unitedstate': 'unitedstatesofamerica',
-        'unitedstates': 'unitedstatesofamerica',
-        'universe': 'na',
-        'unknown': 'na',
-        'urugua': 'uruguay',
-        'us': 'unitedstatesofamerica',
-        'usa': 'unitedstatesofamerica',
-        'usacanada': 'unitedstatesofamerica',
-        'usacurrentlylivinginengland': 'unitedstatesofamerica',
-        'usofa': 'unitedstatesofamerica',
-        'vanwert': 'unitedstatesofamerica',
-        'worcester': 'england',
-        'ysa': 'unitedstatesofamerica',
+        "alachua": "unitedstatesofamerica",
+        "alderney": "unitedkingdom",
+        "america": "unitedstatesofamerica",
+        "aroostook": "unitedstatesofamerica",
+        "bergued": "spain",
+        "bermuda": "unitedkingdom",
+        "c": "na",
+        "ca": "belize",
+        "camden": "unitedstatesofamerica",
+        "cananda": "canada",
+        "catalonia": "spain",
+        "catalunya": "spain",
+        "catalunyaspain": "spain",
+        "caymanislands": "unitedkingdom",
+        "channelislands": "unitedkingdom",
+        "cherokee": "unitedstatesofamerica",
+        "csa": "unitedstatesofamerica",
+        "deutschland": "germany",
+        "disgruntledstatesofamerica": "unitedstatesofamerica",
+        "espaa": "spain",
+        "euskalherria": "spain",
+        "everywhereandanywhere": "na",
+        "faraway": "na",
+        "ferrara": "italy",
+        "fortbend": "unitedstatesofamerica",
+        "framingham": "unitedstatesofamerica",
+        "galiza": "spain",
+        "guam": "unitedstatesofamerica",
+        "guernsey": "unitedkingdom",
+        "hereandthere": "na",
+        "italia": "italy",
+        "k1c7b1": "canada",
+        "kern": "unitedstatesofamerica",
+        "kuwait": "unitedkingdom",
+        "labelgique": "belgium",
+        "lachineternelle": "na",
+        "lafrance": "france",
+        "lasuisse": "switzerland",
+        "litalia": "italy",
+        "lkjlj": "canada",
+        "lleida": "spain",
+        "losestadosunidosdenorteamerica": "unitedstatesofamerica",
+        "maracopa": "unitedstatesofamerica",
+        "maricopa": "unitedstatesofamerica",
+        "morgan": "unitedstatesofamerica",
+        "naontheroad": "na",
+        "nz": "newzealand",
+        "orangeco": "unitedstatesofamerica",
+        "orense": "spain",
+        "pender": "unitedstatesofamerica",
+        "petrolwarnation": "unitedstatesofamerica",
+        "phillipines": "philipines",
+        "polk": "unitedstatesofamerica",
+        "puertorico": "unitedstatesofamerica",
+        "quit": "na",
+        "republicofpanama": "panama",
+        "richmondcountry": "unitedstatesofamerica",
+        "rutherford": "unitedstatesofamerica",
+        "saintloius": "unitedstatesofamerica",
+        "shelby": "unitedstatesofamerica",
+        "space": "na",
+        "sthelena": "unitedkingdom",
+        "stthomasi": "unitedstatesofamerica",
+        "tdzimi": "na",
+        "theworldtomorrow": "na",
+        "tobago": "trinidadandtobago",
+        "ua": "unitedstatesofamerica",
+        "uae": "unitedarabemirates",
+        "uk": "unitedkingdom",
+        "unitedsates": "unitedstatesofamerica",
+        "unitedstaes": "unitedstatesofamerica",
+        "unitedstate": "unitedstatesofamerica",
+        "unitedstates": "unitedstatesofamerica",
+        "universe": "na",
+        "unknown": "na",
+        "urugua": "uruguay",
+        "us": "unitedstatesofamerica",
+        "usa": "unitedstatesofamerica",
+        "usacanada": "unitedstatesofamerica",
+        "usacurrentlylivinginengland": "unitedstatesofamerica",
+        "usofa": "unitedstatesofamerica",
+        "vanwert": "unitedstatesofamerica",
+        "worcester": "england",
+        "ysa": "unitedstatesofamerica",
     }
 
     def get_unchanged(first_str, second_str):
@@ -122,35 +124,41 @@ def get_country_data(users, fill_na: str='unitedstatesofamerica'):
             return first_str
         return second_str
 
-    temp_list = users['location'].apply(lambda x: x.split(sep=',')[-1])
-    country_list = temp_list.str.replace('[^0-9a-zA-Z]', '', regex=True)
+    temp_list = users["location"].apply(lambda x: x.split(sep=",")[-1])
+    country_list = temp_list.str.replace("[^0-9a-zA-Z]", "", regex=True)
 
-    country_list = country_list.combine(country_list.map(trans_dict, na_action='ignore'), get_unchanged)
+    country_list = country_list.combine(
+        country_list.map(trans_dict, na_action="ignore"), get_unchanged
+    )
 
-    country_list = country_list.apply(lambda x: fill_na if x == '' or x == 'na' else x)
+    country_list = country_list.apply(lambda x: fill_na if x == "" or x == "na" else x)
 
     return country_list
 
+
 def get_language_data(books):
     isbn_dict = {
-        '0': 'en',
-        '1': 'en',
-        '2': 'fr',
-        '3': 'de',
-        '4': 'ja',
-        '5': 'en',
-        '6': 'en',
-        '7': 'zh-CN',
-        '8': 'es',
-        '9': 'es',
-        'B': 'en',
+        "0": "en",
+        "1": "en",
+        "2": "fr",
+        "3": "de",
+        "4": "ja",
+        "5": "en",
+        "6": "en",
+        "7": "zh-CN",
+        "8": "es",
+        "9": "es",
+        "B": "en",
     }
 
-    na_book_list = books[books['language'].isna()]
-    guessed_book_list = na_book_list['isbn'].apply(lambda x: x[0]).map(isbn_dict)
-    book_list = books['language'].combine(guessed_book_list, lambda x, y: y if type(x)==float else x)
+    na_book_list = books[books["language"].isna()]
+    guessed_book_list = na_book_list["isbn"].apply(lambda x: x[0]).map(isbn_dict)
+    book_list = books["language"].combine(
+        guessed_book_list, lambda x, y: y if type(x) == float else x
+    )
 
     return book_list
+
 
 def process_custom_data(users, books, ratings1, ratings2):
     """
@@ -167,39 +175,48 @@ def process_custom_data(users, books, ratings1, ratings2):
     ----------
     """
 
-    users['location_country'] = get_country_data(users)
-    users = users.drop(['location'], axis=1)
+    users["location_country"] = get_country_data(users)
+    users = users.drop(["location"], axis=1)
 
     ratings = pd.concat([ratings1, ratings2]).reset_index(drop=True)
 
     # 인덱싱 처리된 데이터 조인
-    custom_df = ratings.merge(users[['user_id', 'location_country', 'age']], on='user_id', how='left').merge(books[['isbn', 'language']], on='isbn', how='left')
-    train_df = ratings1.merge(users[['user_id', 'location_country', 'age']], on='user_id', how='left').merge(books[['isbn', 'language']], on='isbn', how='left')
-    test_df = ratings2.merge(users[['user_id', 'location_country', 'age']], on='user_id', how='left').merge(books[['isbn', 'language']], on='isbn', how='left')
+    custom_df = ratings.merge(
+        users[["user_id", "location_country", "age"]], on="user_id", how="left"
+    ).merge(books[["isbn", "language"]], on="isbn", how="left")
+    train_df = ratings1.merge(
+        users[["user_id", "location_country", "age"]], on="user_id", how="left"
+    ).merge(books[["isbn", "language"]], on="isbn", how="left")
+    test_df = ratings2.merge(
+        users[["user_id", "location_country", "age"]], on="user_id", how="left"
+    ).merge(books[["isbn", "language"]], on="isbn", how="left")
 
     # 인덱싱 처리
-    loc_country2idx = {v:k for k,v in enumerate(custom_df['location_country'].unique())}
-    
-    train_df['location_country'] = train_df['location_country'].map(loc_country2idx)
-    test_df['location_country'] = test_df['location_country'].map(loc_country2idx)
+    loc_country2idx = {
+        v: k for k, v in enumerate(custom_df["location_country"].unique())
+    }
 
-    train_df['age'] = train_df['age'].fillna(int(train_df['age'].mean()))
-    train_df['age'] = train_df['age'].apply(age_map)
-    test_df['age'] = test_df['age'].fillna(int(test_df['age'].mean()))
-    test_df['age'] = test_df['age'].apply(age_map)
+    train_df["location_country"] = train_df["location_country"].map(loc_country2idx)
+    test_df["location_country"] = test_df["location_country"].map(loc_country2idx)
+
+    train_df["age"] = train_df["age"].fillna(int(train_df["age"].mean()))
+    train_df["age"] = train_df["age"].apply(age_map)
+    test_df["age"] = test_df["age"].fillna(int(test_df["age"].mean()))
+    test_df["age"] = test_df["age"].apply(age_map)
 
     # book 파트 인덱싱
-    language2idx = {v:k for k,v in enumerate(custom_df['language'].unique())}
-    
-    train_df['language'] = train_df['language'].map(language2idx)
-    test_df['language'] = test_df['language'].map(language2idx)
+    language2idx = {v: k for k, v in enumerate(custom_df["language"].unique())}
+
+    train_df["language"] = train_df["language"].map(language2idx)
+    test_df["language"] = test_df["language"].map(language2idx)
 
     idx = {
-        "loc_country2idx":loc_country2idx,
-        "language2idx":language2idx,
+        "loc_country2idx": loc_country2idx,
+        "language2idx": language2idx,
     }
 
     return idx, train_df, test_df
+
 
 def custom_data_load(args):
     """
@@ -212,51 +229,57 @@ def custom_data_load(args):
     """
 
     ######################## DATA LOAD
-    users = pd.read_csv(args.data_path + 'users.csv')
-    books = pd.read_csv(args.data_path + 'books.csv')
-    train = pd.read_csv(args.data_path + 'train_ratings.csv')
-    test = pd.read_csv(args.data_path + 'test_ratings.csv')
-    sub = pd.read_csv(args.data_path + 'sample_submission.csv')
+    users = pd.read_csv(args.data_path + "users.csv")
+    books = pd.read_csv(args.data_path + "books.csv")
+    train = pd.read_csv(args.data_path + "train_ratings.csv")
+    test = pd.read_csv(args.data_path + "test_ratings.csv")
+    sub = pd.read_csv(args.data_path + "sample_submission.csv")
 
-    books['language'] = get_language_data(books)
+    books["language"] = get_language_data(books)
 
-    ids = pd.concat([train['user_id'], sub['user_id']]).unique()
-    isbns = pd.concat([train['isbn'], sub['isbn']]).unique()
+    ids = pd.concat([train["user_id"], sub["user_id"]]).unique()
+    isbns = pd.concat([train["isbn"], sub["isbn"]]).unique()
 
-    idx2user = {idx:id for idx, id in enumerate(ids)}
-    idx2isbn = {idx:isbn for idx, isbn in enumerate(isbns)}
+    idx2user = {idx: id for idx, id in enumerate(ids)}
+    idx2isbn = {idx: isbn for idx, isbn in enumerate(isbns)}
 
-    user2idx = {id:idx for idx, id in idx2user.items()}
-    isbn2idx = {isbn:idx for idx, isbn in idx2isbn.items()}
+    user2idx = {id: idx for idx, id in idx2user.items()}
+    isbn2idx = {isbn: idx for idx, isbn in idx2isbn.items()}
 
-    train['user_id'] = train['user_id'].map(user2idx)
-    sub['user_id'] = sub['user_id'].map(user2idx)
-    test['user_id'] = test['user_id'].map(user2idx)
-    users['user_id'] = users['user_id'].map(user2idx)
+    train["user_id"] = train["user_id"].map(user2idx)
+    sub["user_id"] = sub["user_id"].map(user2idx)
+    test["user_id"] = test["user_id"].map(user2idx)
+    users["user_id"] = users["user_id"].map(user2idx)
 
-    train['isbn'] = train['isbn'].map(isbn2idx)
-    sub['isbn'] = sub['isbn'].map(isbn2idx)
-    test['isbn'] = test['isbn'].map(isbn2idx)
-    books['isbn'] = books['isbn'].map(isbn2idx)
+    train["isbn"] = train["isbn"].map(isbn2idx)
+    sub["isbn"] = sub["isbn"].map(isbn2idx)
+    test["isbn"] = test["isbn"].map(isbn2idx)
+    books["isbn"] = books["isbn"].map(isbn2idx)
 
     idx, custom_train, custom_test = process_custom_data(users, books, train, test)
-    field_dims = np.array([len(user2idx), len(isbn2idx),
-                            6, len(idx['loc_country2idx']),
-                            len(idx['language2idx'])], dtype=np.uint32)
+    field_dims = np.array(
+        [
+            len(user2idx),
+            len(isbn2idx),
+            6,
+            len(idx["loc_country2idx"]),
+            len(idx["language2idx"]),
+        ],
+        dtype=np.uint32,
+    )
 
     data = {
-            'train':custom_train,
-            'test':custom_test.drop(['rating'], axis=1),
-            'field_dims':field_dims,
-            'users':users,
-            'books':books,
-            'sub':sub,
-            'idx2user':idx2user,
-            'idx2isbn':idx2isbn,
-            'user2idx':user2idx,
-            'isbn2idx':isbn2idx,
-            }
-
+        "train": custom_train,
+        "test": custom_test.drop(["rating"], axis=1),
+        "field_dims": field_dims,
+        "users": users,
+        "books": books,
+        "sub": sub,
+        "idx2user": idx2user,
+        "idx2isbn": idx2isbn,
+        "user2idx": user2idx,
+        "isbn2idx": isbn2idx,
+    }
 
     return data
 
@@ -274,14 +297,20 @@ def custom_data_split(args, data):
     """
 
     X_train, X_valid, y_train, y_valid = train_test_split(
-                                                        data['train'].drop(['rating'], axis=1),
-                                                        data['train']['rating'],
-                                                        test_size=args.test_size,
-                                                        random_state=args.seed,
-                                                        shuffle=True
-                                                        )
-    data['X_train'], data['X_valid'], data['y_train'], data['y_valid'] = X_train, X_valid, y_train, y_valid
+        data["train"].drop(["rating"], axis=1),
+        data["train"]["rating"],
+        test_size=args.test_size,
+        random_state=args.seed,
+        shuffle=True,
+    )
+    data["X_train"], data["X_valid"], data["y_train"], data["y_valid"] = (
+        X_train,
+        X_valid,
+        y_train,
+        y_valid,
+    )
     return data
+
 
 def custom_data_loader(args, data):
     """
@@ -294,14 +323,30 @@ def custom_data_loader(args, data):
             data shuffle 여부
     ----------
     """
-    train_dataset = TensorDataset(torch.LongTensor(data['X_train'].values), torch.LongTensor(data['y_train'].values))
-    valid_dataset = TensorDataset(torch.LongTensor(data['X_valid'].values), torch.LongTensor(data['y_valid'].values))
-    test_dataset = TensorDataset(torch.LongTensor(data['test'].values))
+    train_dataset = TensorDataset(
+        torch.LongTensor(data["X_train"].values),
+        torch.LongTensor(data["y_train"].values),
+    )
+    valid_dataset = TensorDataset(
+        torch.LongTensor(data["X_valid"].values),
+        torch.LongTensor(data["y_valid"].values),
+    )
+    test_dataset = TensorDataset(torch.LongTensor(data["test"].values))
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
-    valid_dataloader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle)
-    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+    train_dataloader = DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle
+    )
+    valid_dataloader = DataLoader(
+        valid_dataset, batch_size=args.batch_size, shuffle=args.data_shuffle
+    )
+    test_dataloader = DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False
+    )
 
-    data['train_dataloader'], data['valid_dataloader'], data['test_dataloader'] = train_dataloader, valid_dataloader, test_dataloader
+    data["train_dataloader"], data["valid_dataloader"], data["test_dataloader"] = (
+        train_dataloader,
+        valid_dataloader,
+        test_dataloader,
+    )
 
     return data

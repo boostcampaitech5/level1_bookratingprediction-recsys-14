@@ -29,13 +29,13 @@ def train(args, model, dataloader, logger, setting):
     if args.model == "XGB":
         model.fit(dataloader["X_train"], dataloader["y_train"])
         valid_loss = valid(args, model, dataloader, loss_fn)
-        
+
         print(f"valid_loss: {valid_loss:.3f}")
 
         return model
-    
+
     minimum_loss = 999999999
-    
+
     if args.optimizer == "SGD":
         optimizer = SGD(model.parameters(), lr=args.lr)
     elif args.optimizer == "ADAM":
@@ -89,13 +89,14 @@ def train(args, model, dataloader, logger, setting):
 
 def valid(args, model, dataloader, loss_fn):
     if args.model == "XGB":
+
         def rmse(real: list, predict: list) -> float:
             pred = np.array(predict)
             return np.sqrt(np.mean((real - pred) ** 2))
 
-        y_hat = model.predict(dataloader['X_valid'])
+        y_hat = model.predict(dataloader["X_valid"])
 
-        return rmse(y_hat, dataloader['y_valid'])
+        return rmse(y_hat, dataloader["y_valid"])
 
     model.eval()
     total_loss = 0
