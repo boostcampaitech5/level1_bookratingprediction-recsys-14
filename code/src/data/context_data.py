@@ -39,120 +39,6 @@ def random_imputation(df: pd.DataFrame, col: str = "age") -> pd.DataFrame:
     return df
 
 
-def get_country_data(users, fill_na: str = "unitedstatesofamerica"):
-    """
-    Parameters
-    ----------
-    users : pd.DataFrame
-        users.csv를 인덱싱한 데이터
-    fill_na : str
-        users 중 country를 모르는(Nan) 값을 채울 문자열
-    """
-
-    trans_dict = {
-        "alachua": "unitedstatesofamerica",
-        "alderney": "unitedkingdom",
-        "america": "unitedstatesofamerica",
-        "aroostook": "unitedstatesofamerica",
-        "bergued": "spain",
-        "bermuda": "unitedkingdom",
-        "c": "na",
-        "ca": "belize",
-        "camden": "unitedstatesofamerica",
-        "cananda": "canada",
-        "catalonia": "spain",
-        "catalunya": "spain",
-        "catalunyaspain": "spain",
-        "caymanislands": "unitedkingdom",
-        "channelislands": "unitedkingdom",
-        "cherokee": "unitedstatesofamerica",
-        "csa": "unitedstatesofamerica",
-        "deutschland": "germany",
-        "disgruntledstatesofamerica": "unitedstatesofamerica",
-        "espaa": "spain",
-        "euskalherria": "spain",
-        "everywhereandanywhere": "na",
-        "faraway": "na",
-        "ferrara": "italy",
-        "fortbend": "unitedstatesofamerica",
-        "framingham": "unitedstatesofamerica",
-        "galiza": "spain",
-        "guam": "unitedstatesofamerica",
-        "guernsey": "unitedkingdom",
-        "hereandthere": "na",
-        "italia": "italy",
-        "k1c7b1": "canada",
-        "kern": "unitedstatesofamerica",
-        "kuwait": "unitedkingdom",
-        "labelgique": "belgium",
-        "lachineternelle": "na",
-        "lafrance": "france",
-        "lasuisse": "switzerland",
-        "litalia": "italy",
-        "lkjlj": "canada",
-        "lleida": "spain",
-        "losestadosunidosdenorteamerica": "unitedstatesofamerica",
-        "maracopa": "unitedstatesofamerica",
-        "maricopa": "unitedstatesofamerica",
-        "morgan": "unitedstatesofamerica",
-        "naontheroad": "na",
-        "nz": "newzealand",
-        "orangeco": "unitedstatesofamerica",
-        "orense": "spain",
-        "pender": "unitedstatesofamerica",
-        "petrolwarnation": "unitedstatesofamerica",
-        "phillipines": "philipines",
-        "polk": "unitedstatesofamerica",
-        "puertorico": "unitedstatesofamerica",
-        "quit": "na",
-        "republicofpanama": "panama",
-        "richmondcountry": "unitedstatesofamerica",
-        "rutherford": "unitedstatesofamerica",
-        "saintloius": "unitedstatesofamerica",
-        "shelby": "unitedstatesofamerica",
-        "space": "na",
-        "sthelena": "unitedkingdom",
-        "stthomasi": "unitedstatesofamerica",
-        "tdzimi": "na",
-        "theworldtomorrow": "na",
-        "tobago": "trinidadandtobago",
-        "ua": "unitedstatesofamerica",
-        "uae": "unitedarabemirates",
-        "uk": "unitedkingdom",
-        "unitedsates": "unitedstatesofamerica",
-        "unitedstaes": "unitedstatesofamerica",
-        "unitedstate": "unitedstatesofamerica",
-        "unitedstates": "unitedstatesofamerica",
-        "universe": "na",
-        "unknown": "na",
-        "urugua": "uruguay",
-        "us": "unitedstatesofamerica",
-        "usa": "unitedstatesofamerica",
-        "usacanada": "unitedstatesofamerica",
-        "usacurrentlylivinginengland": "unitedstatesofamerica",
-        "usofa": "unitedstatesofamerica",
-        "vanwert": "unitedstatesofamerica",
-        "worcester": "england",
-        "ysa": "unitedstatesofamerica",
-    }
-
-    def get_unchanged(first_str, second_str):
-        if type(second_str) == float:
-            return first_str
-        return second_str
-
-    temp_list = users["location"].apply(lambda x: x.split(sep=",")[-1])
-    country_list = temp_list.str.replace("[^0-9a-zA-Z]", "", regex=True)
-
-    country_list = country_list.combine(
-        country_list.map(trans_dict, na_action="ignore"), get_unchanged
-    )
-
-    country_list = country_list.apply(lambda x: fill_na if x == "" or x == "na" else x)
-
-    return country_list
-
-
 def get_language_data(books):
     isbn_dict = {
         "0": "en",
@@ -316,30 +202,6 @@ def get_country_data(users, fill_na: str = "unitedstatesofamerica"):
     return country_list
 
 
-def get_language_data(books):
-    isbn_dict = {
-        "0": "en",
-        "1": "en",
-        "2": "fr",
-        "3": "de",
-        "4": "ja",
-        "5": "en",
-        "6": "en",
-        "7": "zh-CN",
-        "8": "es",
-        "9": "es",
-        "B": "en",
-    }
-
-    na_book_list = books[books["language"].isna()]
-    guessed_book_list = na_book_list["isbn"].apply(lambda x: x[0]).map(isbn_dict)
-    book_list = books["language"].combine(
-        guessed_book_list, lambda x, y: y if type(x) == float else x
-    )
-
-    return book_list
-
-
 def process_context_data(users, books, ratings1, ratings2):
     """
     Parameters
@@ -466,6 +328,7 @@ def context_data_load(args):
     books["isbn"] = books["isbn"].map(isbn2idx)
 
     idx, context_train, context_test = process_context_data(users, books, train, test)
+
     field_dims = np.array(
         [
             len(user2idx),
