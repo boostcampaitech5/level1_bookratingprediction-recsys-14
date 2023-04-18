@@ -204,6 +204,56 @@ def get_country_data(users, fill_na: str = "unitedstatesofamerica"):
     return country_list
 
 
+def get_age_data(users, books, ratings):
+    """
+    Parameters
+    ----------
+    users : pd.DataFrame
+        users.csv를 인덱싱한 데이터
+    books : pd.DataFrame
+        books.csv를 인덱싱한 데이터
+    ratings : pd.DataFrame
+        train_ratings.csv를 인덱싱한 데이터
+    """
+
+    users_df = users.copy(deep=True)
+
+    merge_temp = ratings.merge(books, how="left", on="isbn")
+    merge_data = merge_temp.merge(users, how="inner", on="user_id")
+
+    null_age_users = users_df[users_df["age"].isna()]
+
+    modify_age_by_isbn = merge_data.groupby("isbn")["age"].agg(["mean", "count"])
+    modify_age_by_isbn.sort_values(by="count", ascending=False)
+
+    for index in null_age_users.index:
+        count = 0
+        sum = 0
+        u_id = users_df.loc[index, "user_id"]
+        isbn = merge_data[merge_data["user_id"] == u_id]["isbn"].values
+
+        for i in isbn:
+            if modify_age_by_isbn.loc[i, "mean"] == np.nan:
+                count += 1
+                sum += modify_age_by_isbn.loc[i, "mean"]
+
+        if count != 0:
+            users_df.loc[index, "age"] = round(sum / count)
+
+    null_age_users = users_df[users_df["age"].isna()]
+
+    modify_age_by_location = users_df.groupby("location_country")["age"].mean()
+    users_df.loc[users_df["age"].isna(), "age"] = null_age_users[
+        "location_country"
+    ].map(modify_age_by_location)
+
+    users_df.loc[users_df["age"] != users_df["age"], "age"] = users_df["age"].mean()
+
+    age_list = users_df["age"]
+
+    return age_list
+
+
 def process_context_data(users, books, ratings1, ratings2, sub):
     """
     Parameters
