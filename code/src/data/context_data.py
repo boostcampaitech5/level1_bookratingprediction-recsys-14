@@ -8,6 +8,12 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 
 
+######################## Process Functions
+
+
+############# Users
+
+
 def age_map(x: int) -> int:
     x = int(x)
     if x < 20:
@@ -39,30 +45,6 @@ def random_imputation(df: pd.DataFrame, col: str = "age") -> pd.DataFrame:
     df.loc[df[col].isnull(), col] = imputed_df
 
     return df
-
-
-def get_language_data(books):
-    isbn_dict = {
-        "0": "en",
-        "1": "en",
-        "2": "fr",
-        "3": "de",
-        "4": "ja",
-        "5": "en",
-        "6": "en",
-        "7": "zh-CN",
-        "8": "es",
-        "9": "es",
-        "B": "en",
-    }
-
-    na_book_list = books[books["language"].isna()]
-    guessed_book_list = na_book_list["isbn"].apply(lambda x: x[0]).map(isbn_dict)
-    book_list = books["language"].combine(
-        guessed_book_list, lambda x, y: y if type(x) == float else x
-    )
-
-    return book_list
 
 
 def gaussian_imputation(
@@ -301,6 +283,54 @@ def get_age_data(users, books, ratings):
     return age_list
 
 
+############# Books
+
+
+def get_language_data(books):
+    isbn_dict = {
+        "0": "en",
+        "1": "en",
+        "2": "fr",
+        "3": "de",
+        "4": "ja",
+        "5": "en",
+        "6": "en",
+        "7": "zh-CN",
+        "8": "es",
+        "9": "es",
+        "B": "en",
+    }
+
+    na_book_list = books[books["language"].isna()]
+    guessed_book_list = na_book_list["isbn"].apply(lambda x: x[0]).map(isbn_dict)
+    book_list = books["language"].combine(
+        guessed_book_list, lambda x, y: y if type(x) == float else x
+    )
+
+    return book_list
+
+
+def process_author(books):
+    temp_books = books["book_author"].copy()
+    temp_books[temp_books[temp_books.isna()].index] = ""
+    temp_books = temp_books.apply(lambda x: x.lower())
+    temp_books = temp_books.replace("[^A-Za-z0-9. ]", "", regex=True)
+    temp_books = temp_books.replace("[.]", " ", regex=True)
+
+    def get_author_initials(input_author):
+        output_name = ""
+        author_name_list = input_author.split(sep=" ")
+        for a in author_name_list[:-1]:
+            if a == "":
+                continue
+            output_name += a[0]
+        return output_name + author_name_list[-1]
+
+    temp_books = temp_books.apply(get_author_initials)
+
+    return temp_books
+
+
 def process_context_data(users, books, ratings1, ratings2, sub):
     """
     Parameters
@@ -332,6 +362,8 @@ def process_context_data(users, books, ratings1, ratings2, sub):
     ############# Books
 
     books["language"] = get_language_data(books)
+
+    books["books_author"] = process_author(books)
 
     ######################## Merge Data
 
