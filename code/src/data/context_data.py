@@ -202,7 +202,7 @@ def get_country_data(users, fill_na: str = "unitedstatesofamerica"):
     return country_list
 
 
-def process_context_data(users, books, ratings1, ratings2):
+def process_context_data(users, books, ratings1, ratings2, sub):
     """
     Parameters
     ----------
@@ -216,6 +216,27 @@ def process_context_data(users, books, ratings1, ratings2):
         test 데이터의 rating
     ----------
     """
+
+    books["language"] = get_language_data(books)
+
+    ids = pd.concat([ratings1["user_id"], sub["user_id"]]).unique()
+    isbns = pd.concat([ratings1["isbn"], sub["isbn"]]).unique()
+
+    idx2user = {idx: id for idx, id in enumerate(ids)}
+    idx2isbn = {idx: isbn for idx, isbn in enumerate(isbns)}
+
+    user2idx = {id: idx for idx, id in idx2user.items()}
+    isbn2idx = {isbn: idx for idx, isbn in idx2isbn.items()}
+
+    ratings1["user_id"] = ratings1["user_id"].map(user2idx)
+    sub["user_id"] = sub["user_id"].map(user2idx)
+    ratings2["user_id"] = ratings2["user_id"].map(user2idx)
+    users["user_id"] = users["user_id"].map(user2idx)
+
+    ratings1["isbn"] = ratings1["isbn"].map(isbn2idx)
+    sub["isbn"] = sub["isbn"].map(isbn2idx)
+    ratings2["isbn"] = ratings2["isbn"].map(isbn2idx)
+    books["isbn"] = books["isbn"].map(isbn2idx)
 
     users["location_city"] = users["location"].apply(lambda x: x.split(",")[0])
     users["location_state"] = users["location"].apply(lambda x: x.split(",")[1])
@@ -277,6 +298,10 @@ def process_context_data(users, books, ratings1, ratings2):
     test_df["book_author"] = test_df["book_author"].map(author2idx)
 
     idx = {
+        "user2idx": user2idx,
+        "isbn2idx": isbn2idx,
+        "idx2user": idx2user,
+        "idx2isbn": idx2isbn,
         "loc_city2idx": loc_city2idx,
         "loc_state2idx": loc_state2idx,
         "loc_country2idx": loc_country2idx,
@@ -306,33 +331,14 @@ def context_data_load(args):
     test = pd.read_csv(args.data_path + "test_ratings.csv")
     sub = pd.read_csv(args.data_path + "sample_submission.csv")
 
-    books["language"] = get_language_data(books)
-
-    ids = pd.concat([train["user_id"], sub["user_id"]]).unique()
-    isbns = pd.concat([train["isbn"], sub["isbn"]]).unique()
-
-    idx2user = {idx: id for idx, id in enumerate(ids)}
-    idx2isbn = {idx: isbn for idx, isbn in enumerate(isbns)}
-
-    user2idx = {id: idx for idx, id in idx2user.items()}
-    isbn2idx = {isbn: idx for idx, isbn in idx2isbn.items()}
-
-    train["user_id"] = train["user_id"].map(user2idx)
-    sub["user_id"] = sub["user_id"].map(user2idx)
-    test["user_id"] = test["user_id"].map(user2idx)
-    users["user_id"] = users["user_id"].map(user2idx)
-
-    train["isbn"] = train["isbn"].map(isbn2idx)
-    sub["isbn"] = sub["isbn"].map(isbn2idx)
-    test["isbn"] = test["isbn"].map(isbn2idx)
-    books["isbn"] = books["isbn"].map(isbn2idx)
-
-    idx, context_train, context_test = process_context_data(users, books, train, test)
+    idx, context_train, context_test = process_context_data(
+        users, books, train, test, sub
+    )
 
     field_dims = np.array(
         [
-            len(user2idx),
-            len(isbn2idx),
+            len(idx["user2idx"]),
+            len(idx["isbn2idx"]),
             6,
             len(idx["loc_city2idx"]),
             len(idx["loc_state2idx"]),
@@ -352,10 +358,10 @@ def context_data_load(args):
         "users": users,
         "books": books,
         "sub": sub,
-        "idx2user": idx2user,
-        "idx2isbn": idx2isbn,
-        "user2idx": user2idx,
-        "isbn2idx": isbn2idx,
+        "idx2user": idx["idx2user"],
+        "idx2isbn": idx["idx2isbn"],
+        "user2idx": idx["user2idx"],
+        "isbn2idx": idx["isbn2idx"],
     }
 
     return data
