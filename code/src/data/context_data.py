@@ -204,6 +204,53 @@ def get_country_data(users, fill_na: str = "unitedstatesofamerica"):
     return country_list
 
 
+def get_publisher_data(books):
+    """
+    Parameters
+    ----------
+    books : pd.DataFrame
+        books.csv를 인덱싱한 데이터
+    """
+
+    books_df = books.copy(deep=True)
+
+    print(books_df["publisher"].nunique())
+
+    publisher_dict = (books_df["publisher"].value_counts()).to_dict()
+    publisher_count_df = pd.DataFrame(
+        list(publisher_dict.items()), columns=["publisher", "count"]
+    )
+
+    publisher_count_df = publisher_count_df.sort_values(by=["count"], ascending=False)
+
+    modify_list = publisher_count_df[publisher_count_df["count"] > 1].publisher.values
+
+    for publisher in modify_list:
+        try:
+            number = (
+                books_df[books_df["publisher"] == publisher]["isbn"]
+                .apply(lambda x: x[:4])
+                .value_counts()
+                .index[0]
+            )
+            right_publisher = (
+                books_df[books_df["isbn"].apply(lambda x: x[:4]) == number]["publisher"]
+                .value_counts()
+                .index[0]
+            )
+            books_df.loc[
+                books_df[books_df["isbn"].apply(lambda x: x[:4]) == number].index,
+                "publisher",
+            ] = right_publisher
+        except:
+            pass
+
+    publisher_list = books_df["publisher"]
+    print(books_df["publisher"].nunique())
+
+    return publisher_list
+
+
 def get_age_data(users, books, ratings):
     """
     Parameters
