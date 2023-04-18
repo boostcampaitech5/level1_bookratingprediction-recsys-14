@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, Dataset
+from sklearn.model_selection import KFold
 
 
 def age_map(x: int) -> int:
@@ -214,8 +215,6 @@ def get_publisher_data(books):
 
     books_df = books.copy(deep=True)
 
-    print(books_df["publisher"].nunique())
-
     publisher_dict = (books_df["publisher"].value_counts()).to_dict()
     publisher_count_df = pd.DataFrame(
         list(publisher_dict.items()), columns=["publisher", "count"]
@@ -246,7 +245,6 @@ def get_publisher_data(books):
             pass
 
     publisher_list = books_df["publisher"]
-    print(books_df["publisher"].nunique())
 
     return publisher_list
 
@@ -326,12 +324,13 @@ def process_context_data(users, books, ratings1, ratings2, sub):
     users["location_country"] = get_country_data(users)
     users = users.drop(["location"], axis=1)
 
-    users["age"] = users["age"].fillna(int(users["age"].mean()))
+    users = random_imputation(users, "age")
     users["age"] = users["age"].apply(age_map)
 
     ############# Books
 
     books["language"] = get_language_data(books)
+    # books["publisher"] = get_publisher_data(books)
 
     ######################## Merge Data
 
@@ -492,23 +491,44 @@ def context_data_split(args, data):
     ----------
     """
 
-    X_train, X_valid, y_train, y_valid = train_test_split(
-        data["train"].drop(["rating"], axis=1),
-        data["train"]["rating"],
-        test_size=args.test_size,
-        random_state=args.seed,
-        shuffle=True,
-    )
-    data["X_train"], data["X_valid"], data["y_train"], data["y_valid"] = (
-        X_train,
-        X_valid,
-        y_train,
-        y_valid,
-    )
+    # X_train, X_valid, y_train, y_valid = train_test_split(
+    #     data["train"].drop(["rating"], axis=1),
+    #     data["train"]["rating"],
+    #     test_size=args.test_size,
+    #     random_state=args.seed,
+    #     shuffle=True,
+    # )
+    # data["X_train"], data["X_valid"], data["y_train"], data["y_valid"] = (
+    #     X_train,
+    #     X_valid,
+    #     y_train,
+    #     y_valid,
+    # )
+    kf = KFold(n_splits=args.k, random_state=args.seed, shuffle=True)
+    for fold_idx, (train_index, valid_index) in enumerate(kf.split(data["train"])):
+        train_fold = data["train"].iloc[train_index]
+        valid_fold = data["train"].iloc[valid_index]
+
+        X_train_fold, y_train_fold = (
+            train_fold.drop(["rating"], axis=1),
+            train_fold["rating"],
+        )
+        X_valid_fold, y_valid_fold = (
+            valid_fold.drop(["rating"], axis=1),
+            valid_fold["rating"],
+        )
+
+        (
+            data[f"X_train_fold_{fold_idx}"],
+            data[f"X_valid_fold_{fold_idx}"],
+            data[f"y_train_fold_{fold_idx}"],
+            data[f"y_valid_fold_{fold_idx}"],
+        ) = (X_train_fold, X_valid_fold, y_train_fold, y_valid_fold)
+
     return data
 
 
-def context_data_loader(args, data):
+def context_data_loader(args, data, fold_idx):
     """
     Parameters
     ----------
@@ -517,16 +537,18 @@ def context_data_loader(args, data):
             데이터 batch에 사용할 데이터 사이즈
         data_shuffle : bool
             data shuffle 여부
+        fold_idx : int
+            현재 fold의 인덱스
     ----------
     """
 
     train_dataset = TensorDataset(
-        torch.LongTensor(data["X_train"].values),
-        torch.LongTensor(data["y_train"].values),
+        torch.LongTensor(data[f"X_train_fold_{fold_idx}"].values),
+        torch.LongTensor(data[f"y_train_fold_{fold_idx}"].values),
     )
     valid_dataset = TensorDataset(
-        torch.LongTensor(data["X_valid"].values),
-        torch.LongTensor(data["y_valid"].values),
+        torch.LongTensor(data[f"X_valid_fold_{fold_idx}"].values),
+        torch.LongTensor(data[f"y_valid_fold_{fold_idx}"].values),
     )
     test_dataset = TensorDataset(torch.LongTensor(data["test"].values))
 
@@ -545,5 +567,5 @@ def context_data_loader(args, data):
         valid_dataloader,
         test_dataloader,
     )
-
+    print("finish loader")
     return data

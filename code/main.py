@@ -1,6 +1,7 @@
 import time
 import argparse
 import pandas as pd
+import numpy as np
 from src.utils import Logger, Setting, models_load
 from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
@@ -26,7 +27,7 @@ def main(args):
 
         nltk.download("punkt")
         data = text_data_load(args)
-    elif args.model == "XGB":
+    elif args.model in ("XGB", "CatReg"):
         data = custom_data_load(args)
     else:
         pass
@@ -35,47 +36,69 @@ def main(args):
     print(f"--------------- {args.model} Train/Valid Split ---------------")
     if args.model in ("FM", "FFM"):
         data = context_data_split(args, data)
-        data = context_data_loader(args, data)
 
     elif args.model in ("NCF", "WDN", "DCN"):
         data = dl_data_split(args, data)
-        data = dl_data_loader(args, data)
 
     elif args.model == "CNN_FM":
         data = image_data_split(args, data)
-        data = image_data_loader(args, data)
 
     elif args.model == "DeepCoNN":
         data = text_data_split(args, data)
-        data = text_data_loader(args, data)
 
-    elif args.model == "XGB":
+    elif args.model in ("XGB", "CatReg"):
         data = custom_data_split(args, data)
-        data = custom_data_loader(args, data)
 
     else:
         pass
+    # print("data_loader")
+    val_list = []
+    for fold_idx in range(args.k):
+        print("start loader")
+        if args.model in ("FM", "FFM"):
+            data = context_data_loader(args, data, fold_idx)
 
-    ####################### Setting for Log
-    setting = Setting()
+        elif args.model in ("NCF", "WDN", "DCN"):
+            data = dl_data_loader(args, data, fold_idx)
 
-    log_path = setting.get_log_path(args)
-    setting.make_dir(log_path)
+        elif args.model == "CNN_FM":
+            data = image_data_loader(args, data, fold_idx)
 
-    logger = Logger(args, log_path)
-    logger.save_args()
+        elif args.model == "DeepCoNN":
+            data = text_data_loader(args, data, fold_idx)
 
-    ######################## Model
-    print(f"--------------- INIT {args.model} ---------------")
-    model = models_load(args, data)
+        elif args.model == "XGB":
+            data = custom_data_loader(args, data, fold_idx)
 
-    ######################## TRAIN
-    print(f"--------------- {args.model} TRAINING ---------------")
-    model = train(args, model, data, logger, setting)
+        else:
+            pass
 
-    ######################## INFERENCE
-    print(f"--------------- {args.model} PREDICT ---------------")
-    predicts = test(args, model, data, setting)
+        ####################### Setting for Log
+        setting = Setting()
+
+        log_path = setting.get_log_path(args)
+        setting.make_dir(f"{log_path}_{fold_idx}")
+        logger = Logger(args, f"{log_path}_{fold_idx}")
+        logger.save_args()
+
+        ######################## Step
+        print(f"\n=============== {fold_idx+1} ===============\n")
+
+        ######################## Model
+        print(f"--------------- INIT {args.model} ---------------")
+        model = models_load(args, data)
+
+        ######################## TRAIN
+        print(f"--------------- {args.model} TRAINING ---------------")
+        model, val_loss = train(args, model, data, logger, setting)
+        val_list.append(val_loss)
+
+        ######################## INFERENCE
+        print(f"--------------- {args.model} PREDICT ---------------")
+        predicts = test(args, model, data, setting)
+
+    print(f"--------------- {args.model} AVG VALIDATION LOSS ---------------")
+    print(np.mean(val_list))
 
     ######################## SAVE PREDICT
     print(f"--------------- SAVE {args.model} PREDICT ---------------")
@@ -117,6 +140,7 @@ if __name__ == "__main__":
     arg(
         "--test_size", type=float, default=0.2, help="Train/Valid split 비율을 조정할 수 있습니다."
     )
+    arg("--k", type=int, default=5, help="k-fold의 k값을 조정할 수 있습니다.")
     arg("--seed", type=int, default=42, help="seed 값을 조정할 수 있습니다.")
     arg(
         "--use_best_model",

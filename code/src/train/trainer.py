@@ -26,7 +26,7 @@ def train(args, model, dataloader, logger, setting):
     else:
         pass
 
-    if args.model == "XGB":
+    if args.model in ("XGB", "CatReg"):
         model.fit(dataloader["X_train"], dataloader["y_train"])
         valid_loss = valid(args, model, dataloader, loss_fn)
 
@@ -84,11 +84,11 @@ def train(args, model, dataloader, logger, setting):
                 f"{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt",
             )
     logger.close()
-    return model
+    return model, minimum_loss
 
 
 def valid(args, model, dataloader, loss_fn):
-    if args.model == "XGB":
+    if args.model in ("XGB", "CatReg"):
 
         def rmse(real: list, predict: list) -> float:
             pred = np.array(predict)
@@ -125,7 +125,7 @@ def valid(args, model, dataloader, loss_fn):
 
 
 def test(args, model, dataloader, setting):
-    if args.model == "XGB":
+    if args.model in ("XGB", "CatReg"):
         predicts = model.predict(dataloader["test"])
         return predicts
 

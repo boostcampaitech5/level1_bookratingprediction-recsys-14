@@ -7,6 +7,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torch.autograd import Variable
 from tqdm import tqdm
+from sklearn.model_selection import KFold
 import os
 
 
@@ -162,23 +163,45 @@ def image_data_split(args, data):
         image_data_load로 부터 전처리가 끝난 데이터가 담긴 사전 형식의 데이터를 입력합니다.
     ----------
     """
-    X_train, X_valid, y_train, y_valid = train_test_split(
-        data["img_train"][["user_id", "isbn", "img_vector"]],
-        data["img_train"]["rating"],
-        test_size=args.test_size,
-        random_state=args.seed,
-        shuffle=True,
-    )
-    data["X_train"], data["X_valid"], data["y_train"], data["y_valid"] = (
-        X_train,
-        X_valid,
-        y_train,
-        y_valid,
-    )
+    # X_train, X_valid, y_train, y_valid = train_test_split(
+    #     data["img_train"][["user_id", "isbn", "img_vector"]],
+    #     data["img_train"]["rating"],
+    #     test_size=args.test_size,
+    #     random_state=args.seed,
+    #     shuffle=True,
+    # )
+    # data["X_train"], data["X_valid"], data["y_train"], data["y_valid"] = (
+    #     X_train,
+    #     X_valid,
+    #     y_train,
+    #     y_valid,
+    # )
+
+    kf = KFold(n_splits=args.k, random_state=args.seed, shuffle=True)
+    for fold_idx, (train_index, valid_index) in enumerate(kf.split(data["img_train"])):
+        train_fold = data["img_train"].iloc[train_index]
+        valid_fold = data["img_train"].iloc[valid_index]
+
+        X_train_fold, y_train_fold = (
+            train_fold[["user_id", "isbn", "img_vector"]],
+            train_fold["rating"],
+        )
+        X_valid_fold, y_valid_fold = (
+            valid_fold[["user_id", "isbn", "img_vector"]],
+            valid_fold["rating"],
+        )
+
+        (
+            data[f"X_train_fold_{fold_idx}"],
+            data[f"X_valid_fold_{fold_idx}"],
+            data[f"y_train_fold_{fold_idx}"],
+            data[f"y_valid_fold_{fold_idx}"],
+        ) = (X_train_fold, X_valid_fold, y_train_fold, y_valid_fold)
+
     return data
 
 
-def image_data_loader(args, data):
+def image_data_loader(args, data, fold_idx):
     """
     Parameters
     ----------
@@ -190,14 +213,14 @@ def image_data_loader(args, data):
     ----------
     """
     train_dataset = Image_Dataset(
-        data["X_train"][["user_id", "isbn"]].values,
-        data["X_train"]["img_vector"].values,
-        data["y_train"].values,
+        data[f"X_train_fold_{fold_idx}"][["user_id", "isbn"]].values,
+        data[f"X_train_fold_{fold_idx}"]["img_vector"].values,
+        data[f"y_train_fold_{fold_idx}"].values,
     )
     valid_dataset = Image_Dataset(
-        data["X_valid"][["user_id", "isbn"]].values,
-        data["X_valid"]["img_vector"].values,
-        data["y_valid"].values,
+        data[f"X_valid_fold_{fold_idx}"][["user_id", "isbn"]].values,
+        data[f"X_valid_fold_{fold_idx}"]["img_vector"].values,
+        data[f"y_valid_fold_{fold_idx}"].values,
     )
     test_dataset = Image_Dataset(
         data["img_test"][["user_id", "isbn"]].values,

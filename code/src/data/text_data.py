@@ -10,6 +10,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torch.autograd import Variable
 from transformers import BertModel, BertTokenizer
+from sklearn.model_selection import KFold
 
 
 def text_preprocessing(summary):
@@ -327,25 +328,50 @@ def text_data_split(args, data):
         text_data_load로 부터 전처리가 끝난 데이터가 담긴 사전 형식의 데이터를 입력합니다.
     ----------
     """
-    X_train, X_valid, y_train, y_valid = train_test_split(
-        data["text_train"][
-            ["user_id", "isbn", "user_summary_merge_vector", "item_summary_vector"]
-        ],
-        data["text_train"]["rating"],
-        test_size=args.test_size,
-        random_state=args.seed,
-        shuffle=True,
-    )
-    data["X_train"], data["X_valid"], data["y_train"], data["y_valid"] = (
-        X_train,
-        X_valid,
-        y_train,
-        y_valid,
-    )
+    # X_train, X_valid, y_train, y_valid = train_test_split(
+    #     data["text_train"][
+    #         ["user_id", "isbn", "user_summary_merge_vector", "item_summary_vector"]
+    #     ],
+    #     data["text_train"]["rating"],
+    #     test_size=args.test_size,
+    #     random_state=args.seed,
+    #     shuffle=True,
+    # )
+    # data["X_train"], data["X_valid"], data["y_train"], data["y_valid"] = (
+    #     X_train,
+    #     X_valid,
+    #     y_train,
+    #     y_valid,
+    # )
+    kf = KFold(n_splits=args.k, random_state=args.seed, shuffle=True)
+    for fold_idx, (train_index, valid_index) in enumerate(kf.split(data["text_train"])):
+        train_fold = data["text_train"].iloc[train_index]
+        valid_fold = data["text_train"].iloc[valid_index]
+
+        X_train_fold, y_train_fold = (
+            train_fold[
+                ["user_id", "isbn", "user_summary_merge_vector", "item_summary_vector"]
+            ],
+            train_fold["rating"],
+        )
+        X_valid_fold, y_valid_fold = (
+            valid_fold[
+                ["user_id", "isbn", "user_summary_merge_vector", "item_summary_vector"]
+            ],
+            valid_fold["rating"],
+        )
+
+        (
+            data[f"X_train_fold_{fold_idx}"],
+            data[f"X_valid_fold_{fold_idx}"],
+            data[f"y_train_fold_{fold_idx}"],
+            data[f"y_valid_fold_{fold_idx}"],
+        ) = (X_train_fold, X_valid_fold, y_train_fold, y_valid_fold)
+
     return data
 
 
-def text_data_loader(args, data):
+def text_data_loader(args, data, fold_idx):
     """
     Parameters
     ----------
@@ -357,16 +383,16 @@ def text_data_loader(args, data):
     ----------
     """
     train_dataset = Text_Dataset(
-        data["X_train"][["user_id", "isbn"]].values,
-        data["X_train"]["user_summary_merge_vector"].values,
-        data["X_train"]["item_summary_vector"].values,
-        data["y_train"].values,
+        data[f"X_train_fold_{fold_idx}"][["user_id", "isbn"]].values,
+        data[f"X_train_fold_{fold_idx}"]["user_summary_merge_vector"].values,
+        data[f"X_train_fold_{fold_idx}"]["item_summary_vector"].values,
+        data[f"y_train_fold_{fold_idx}"].values,
     )
     valid_dataset = Text_Dataset(
-        data["X_valid"][["user_id", "isbn"]].values,
-        data["X_valid"]["user_summary_merge_vector"].values,
-        data["X_valid"]["item_summary_vector"].values,
-        data["y_valid"].values,
+        data[f"X_valid_fold_{fold_idx}"][["user_id", "isbn"]].values,
+        data[f"X_valid_fold_{fold_idx}"]["user_summary_merge_vector"].values,
+        data[f"X_valid_fold_{fold_idx}"]["item_summary_vector"].values,
+        data[f"y_valid_fold_{fold_idx}"].values,
     )
     test_dataset = Text_Dataset(
         data["text_test"][["user_id", "isbn"]].values,
