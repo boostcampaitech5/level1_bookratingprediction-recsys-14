@@ -217,26 +217,9 @@ def process_context_data(users, books, ratings1, ratings2, sub):
     ----------
     """
 
-    books["language"] = get_language_data(books)
+    ######################## Process Data
 
-    ids = pd.concat([ratings1["user_id"], sub["user_id"]]).unique()
-    isbns = pd.concat([ratings1["isbn"], sub["isbn"]]).unique()
-
-    idx2user = {idx: id for idx, id in enumerate(ids)}
-    idx2isbn = {idx: isbn for idx, isbn in enumerate(isbns)}
-
-    user2idx = {id: idx for idx, id in idx2user.items()}
-    isbn2idx = {isbn: idx for idx, isbn in idx2isbn.items()}
-
-    ratings1["user_id"] = ratings1["user_id"].map(user2idx)
-    sub["user_id"] = sub["user_id"].map(user2idx)
-    ratings2["user_id"] = ratings2["user_id"].map(user2idx)
-    users["user_id"] = users["user_id"].map(user2idx)
-
-    ratings1["isbn"] = ratings1["isbn"].map(isbn2idx)
-    sub["isbn"] = sub["isbn"].map(isbn2idx)
-    ratings2["isbn"] = ratings2["isbn"].map(isbn2idx)
-    books["isbn"] = books["isbn"].map(isbn2idx)
+    ############# Users
 
     users["location_city"] = users["location"].apply(lambda x: x.split(",")[0])
     users["location_state"] = users["location"].apply(lambda x: x.split(",")[1])
@@ -244,57 +227,88 @@ def process_context_data(users, books, ratings1, ratings2, sub):
     users["location_country"] = get_country_data(users)
     users = users.drop(["location"], axis=1)
 
+    users["age"] = users["age"].fillna(int(users["age"].mean()))
+    users["age"] = users["age"].apply(age_map)
+
+    ############# Books
+
+    books["language"] = get_language_data(books)
+
+    ######################## Merge Data
+
     ratings = pd.concat([ratings1, ratings2]).reset_index(drop=True)
 
-    # 인덱싱 처리된 데이터 조인
     context_df = ratings.merge(users, on="user_id", how="left").merge(
         books[["isbn", "category", "publisher", "language", "book_author"]],
         on="isbn",
         how="left",
     )
+
     train_df = ratings1.merge(users, on="user_id", how="left").merge(
         books[["isbn", "category", "publisher", "language", "book_author"]],
         on="isbn",
         how="left",
     )
+
     test_df = ratings2.merge(users, on="user_id", how="left").merge(
         books[["isbn", "category", "publisher", "language", "book_author"]],
         on="isbn",
         how="left",
     )
 
-    # 인덱싱 처리
+    ######################## Index Data
+
+    ############# Users
+
+    # user_id
+    ids = pd.concat([ratings1["user_id"], sub["user_id"]]).unique()
+    idx2user = {idx: id for idx, id in enumerate(ids)}
+    user2idx = {id: idx for idx, id in idx2user.items()}
+    train_df["user_id"] = train_df["user_id"].map(user2idx)
+    test_df["user_id"] = test_df["user_id"].map(user2idx)
+
+    # location
     loc_city2idx = {v: k for k, v in enumerate(context_df["location_city"].unique())}
+    train_df["location_city"] = train_df["location_city"].map(loc_city2idx)
+    test_df["location_city"] = test_df["location_city"].map(loc_city2idx)
+
     loc_state2idx = {v: k for k, v in enumerate(context_df["location_state"].unique())}
+    train_df["location_state"] = train_df["location_state"].map(loc_state2idx)
+    test_df["location_state"] = test_df["location_state"].map(loc_state2idx)
+
     loc_country2idx = {
         v: k for k, v in enumerate(context_df["location_country"].unique())
     }
-
-    train_df["location_city"] = train_df["location_city"].map(loc_city2idx)
-    train_df["location_state"] = train_df["location_state"].map(loc_state2idx)
     train_df["location_country"] = train_df["location_country"].map(loc_country2idx)
-    test_df["location_city"] = test_df["location_city"].map(loc_city2idx)
-    test_df["location_state"] = test_df["location_state"].map(loc_state2idx)
     test_df["location_country"] = test_df["location_country"].map(loc_country2idx)
 
-    train_df["age"] = train_df["age"].fillna(int(train_df["age"].mean()))
-    train_df["age"] = train_df["age"].apply(age_map)
-    test_df["age"] = test_df["age"].fillna(int(test_df["age"].mean()))
-    test_df["age"] = test_df["age"].apply(age_map)
+    ############# Books
 
-    # book 파트 인덱싱
+    # isbn
+    isbns = pd.concat([ratings1["isbn"], sub["isbn"]]).unique()
+    idx2isbn = {idx: isbn for idx, isbn in enumerate(isbns)}
+    isbn2idx = {isbn: idx for idx, isbn in idx2isbn.items()}
+    train_df["isbn"] = train_df["isbn"].map(isbn2idx)
+    test_df["isbn"] = test_df["isbn"].map(isbn2idx)
+
+    # category
     category2idx = {v: k for k, v in enumerate(context_df["category"].unique())}
-    publisher2idx = {v: k for k, v in enumerate(context_df["publisher"].unique())}
-    language2idx = {v: k for k, v in enumerate(context_df["language"].unique())}
-    author2idx = {v: k for k, v in enumerate(context_df["book_author"].unique())}
-
     train_df["category"] = train_df["category"].map(category2idx)
-    train_df["publisher"] = train_df["publisher"].map(publisher2idx)
-    train_df["language"] = train_df["language"].map(language2idx)
-    train_df["book_author"] = train_df["book_author"].map(author2idx)
     test_df["category"] = test_df["category"].map(category2idx)
+
+    # publisher
+    publisher2idx = {v: k for k, v in enumerate(context_df["publisher"].unique())}
+    train_df["publisher"] = train_df["publisher"].map(publisher2idx)
     test_df["publisher"] = test_df["publisher"].map(publisher2idx)
+
+    # language
+    language2idx = {v: k for k, v in enumerate(context_df["language"].unique())}
+    train_df["language"] = train_df["language"].map(language2idx)
     test_df["language"] = test_df["language"].map(language2idx)
+
+    # author
+    author2idx = {v: k for k, v in enumerate(context_df["book_author"].unique())}
+    train_df["book_author"] = train_df["book_author"].map(author2idx)
     test_df["book_author"] = test_df["book_author"].map(author2idx)
 
     idx = {
