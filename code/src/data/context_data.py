@@ -335,7 +335,7 @@ def process_context_data(users, books, ratings1, ratings2, sub):
     """
     Parameters
     ----------
-    users : pd.DataFrame
+    users : pd.DataFrameuser_column_list
         users.csv를 인덱싱한 데이터
     books : pd.DataFrame
         books.csv를 인덱싱한 데이터
@@ -343,8 +343,12 @@ def process_context_data(users, books, ratings1, ratings2, sub):
         train 데이터의 rating
     ratings2 : pd.DataFrame
         test 데이터의 rating
+
     ----------
     """
+
+    user_column_list = ["user_id", "location_country", "age"]
+    book_column_list = ["isbn", "language", "book_author", "category"]
 
     ######################## Process Data
 
@@ -369,25 +373,27 @@ def process_context_data(users, books, ratings1, ratings2, sub):
 
     ratings = pd.concat([ratings1, ratings2]).reset_index(drop=True)
 
-    context_df = ratings.merge(users, on="user_id", how="left").merge(
-        books[["isbn", "category", "publisher", "language", "book_author"]],
+    context_df = ratings.merge(users[user_column_list], on="user_id", how="left").merge(
+        books[book_column_list],
         on="isbn",
         how="left",
     )
 
-    train_df = ratings1.merge(users, on="user_id", how="left").merge(
-        books[["isbn", "category", "publisher", "language", "book_author"]],
+    train_df = ratings1.merge(users[user_column_list], on="user_id", how="left").merge(
+        books[book_column_list],
         on="isbn",
         how="left",
     )
 
-    test_df = ratings2.merge(users, on="user_id", how="left").merge(
-        books[["isbn", "category", "publisher", "language", "book_author"]],
+    test_df = ratings2.merge(users[user_column_list], on="user_id", how="left").merge(
+        books[book_column_list],
         on="isbn",
         how="left",
     )
 
     ######################## Index Data
+
+    idx = dict()
 
     ############# Users
 
@@ -397,21 +403,40 @@ def process_context_data(users, books, ratings1, ratings2, sub):
     user2idx = {id: idx for idx, id in idx2user.items()}
     train_df["user_id"] = train_df["user_id"].map(user2idx)
     test_df["user_id"] = test_df["user_id"].map(user2idx)
+    idx["idx2user"] = idx2user
+    idx["user2idx"] = user2idx
 
     # location
-    loc_city2idx = {v: k for k, v in enumerate(context_df["location_city"].unique())}
-    train_df["location_city"] = train_df["location_city"].map(loc_city2idx)
-    test_df["location_city"] = test_df["location_city"].map(loc_city2idx)
+    if "location_city" in user_column_list:
+        loc_city2idx = {
+            v: k for k, v in enumerate(context_df["location_city"].unique())
+        }
+        train_df["location_city"] = train_df["location_city"].map(loc_city2idx)
+        test_df["location_city"] = test_df["location_city"].map(loc_city2idx)
+        idx["loc_city2idx"] = loc_city2idx
 
-    loc_state2idx = {v: k for k, v in enumerate(context_df["location_state"].unique())}
-    train_df["location_state"] = train_df["location_state"].map(loc_state2idx)
-    test_df["location_state"] = test_df["location_state"].map(loc_state2idx)
+    if "location_state" in user_column_list:
+        loc_state2idx = {
+            v: k for k, v in enumerate(context_df["location_state"].unique())
+        }
+        train_df["location_state"] = train_df["location_state"].map(loc_state2idx)
+        test_df["location_state"] = test_df["location_state"].map(loc_state2idx)
+        idx["loc_state2idx"] = loc_state2idx
 
-    loc_country2idx = {
-        v: k for k, v in enumerate(context_df["location_country"].unique())
-    }
-    train_df["location_country"] = train_df["location_country"].map(loc_country2idx)
-    test_df["location_country"] = test_df["location_country"].map(loc_country2idx)
+    if "location_country" in user_column_list:
+        loc_country2idx = {
+            v: k for k, v in enumerate(context_df["location_country"].unique())
+        }
+        train_df["location_country"] = train_df["location_country"].map(loc_country2idx)
+        test_df["location_country"] = test_df["location_country"].map(loc_country2idx)
+        idx["loc_country2idx"] = loc_country2idx
+
+    if "age" in user_column_list:
+        age2idx = {v: k for k, v in enumerate(context_df["age"].unique())}
+
+        # train_df["age"] = train_df["age"].map(age2idx)
+        # test_df["age"] = test_df["age"].map(age2idx)
+        idx["age"] = age2idx
 
     ############# Books
 
@@ -421,40 +446,36 @@ def process_context_data(users, books, ratings1, ratings2, sub):
     isbn2idx = {isbn: idx for idx, isbn in idx2isbn.items()}
     train_df["isbn"] = train_df["isbn"].map(isbn2idx)
     test_df["isbn"] = test_df["isbn"].map(isbn2idx)
+    idx["idx2isbn"] = idx2isbn
+    idx["isbn2idx"] = isbn2idx
 
     # category
-    category2idx = {v: k for k, v in enumerate(context_df["category"].unique())}
-    train_df["category"] = train_df["category"].map(category2idx)
-    test_df["category"] = test_df["category"].map(category2idx)
+    if "category" in book_column_list:
+        category2idx = {v: k for k, v in enumerate(context_df["category"].unique())}
+        train_df["category"] = train_df["category"].map(category2idx)
+        test_df["category"] = test_df["category"].map(category2idx)
+        idx["category2idx"] = category2idx
 
     # publisher
-    publisher2idx = {v: k for k, v in enumerate(context_df["publisher"].unique())}
-    train_df["publisher"] = train_df["publisher"].map(publisher2idx)
-    test_df["publisher"] = test_df["publisher"].map(publisher2idx)
+    if "publisher" in book_column_list:
+        publisher2idx = {v: k for k, v in enumerate(context_df["publisher"].unique())}
+        train_df["publisher"] = train_df["publisher"].map(publisher2idx)
+        test_df["publisher"] = test_df["publisher"].map(publisher2idx)
+        idx["publisher2idx"] = publisher2idx
 
     # language
-    language2idx = {v: k for k, v in enumerate(context_df["language"].unique())}
-    train_df["language"] = train_df["language"].map(language2idx)
-    test_df["language"] = test_df["language"].map(language2idx)
+    if "language" in book_column_list:
+        language2idx = {v: k for k, v in enumerate(context_df["language"].unique())}
+        train_df["language"] = train_df["language"].map(language2idx)
+        test_df["language"] = test_df["language"].map(language2idx)
+        idx["language2idx"] = language2idx
 
     # author
-    author2idx = {v: k for k, v in enumerate(context_df["book_author"].unique())}
-    train_df["book_author"] = train_df["book_author"].map(author2idx)
-    test_df["book_author"] = test_df["book_author"].map(author2idx)
-
-    idx = {
-        "user2idx": user2idx,
-        "isbn2idx": isbn2idx,
-        "idx2user": idx2user,
-        "idx2isbn": idx2isbn,
-        "loc_city2idx": loc_city2idx,
-        "loc_state2idx": loc_state2idx,
-        "loc_country2idx": loc_country2idx,
-        "category2idx": category2idx,
-        "publisher2idx": publisher2idx,
-        "language2idx": language2idx,
-        "author2idx": author2idx,
-    }
+    if "book_author" in book_column_list:
+        author2idx = {v: k for k, v in enumerate(context_df["book_author"].unique())}
+        train_df["book_author"] = train_df["book_author"].map(author2idx)
+        test_df["book_author"] = test_df["book_author"].map(author2idx)
+        idx["author2idx"] = author2idx
 
     return idx, train_df, test_df
 
@@ -481,18 +502,7 @@ def context_data_load(args):
     )
 
     field_dims = np.array(
-        [
-            len(idx["user2idx"]),
-            len(idx["isbn2idx"]),
-            6,
-            len(idx["loc_city2idx"]),
-            len(idx["loc_state2idx"]),
-            len(idx["loc_country2idx"]),
-            len(idx["category2idx"]),
-            len(idx["publisher2idx"]),
-            len(idx["language2idx"]),
-            len(idx["author2idx"]),
-        ],
+        [len(v) for i, v in idx.items() if i not in ["idx2user", "idx2isbn"]],
         dtype=np.uint32,
     )
 
