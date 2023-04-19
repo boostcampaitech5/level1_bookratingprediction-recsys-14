@@ -29,6 +29,7 @@ def main(args):
             "batch_size": args.batch_size,
         },
     )
+    wandb.run.name = Setting().get_log_path(args).split('/')[2]
 
     ######################## DATA LOAD
     print(f"--------------- {args.model} Load Data ---------------")
