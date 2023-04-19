@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch.nn import MSELoss
 from torch.optim import SGD, Adam
+import wandb
 
 
 class RMSELoss(nn.Module):
@@ -25,8 +26,8 @@ def train(args, model, dataloader, logger, setting):
         loss_fn = RMSELoss()
     else:
         pass
-
-    if args.model in ("XGB", "CatReg"):
+    wandb.watch(model, loss_fn, log="all", log_freq=10)
+    if args.model == "XGB":
         model.fit(dataloader["X_train"], dataloader["y_train"])
         valid_loss = valid(args, model, dataloader, loss_fn)
 
@@ -83,12 +84,13 @@ def train(args, model, dataloader, logger, setting):
                 model.state_dict(),
                 f"{args.saved_model_path}/{setting.save_time}_{args.model}_model.pt",
             )
+    wandb.log({"loss": minimum_loss}, step=epoch)
     logger.close()
     return model, minimum_loss
 
 
 def valid(args, model, dataloader, loss_fn):
-    if args.model in ("XGB", "CatReg"):
+    if args.model == "XGB":
 
         def rmse(real: list, predict: list) -> float:
             pred = np.array(predict)
@@ -125,7 +127,7 @@ def valid(args, model, dataloader, loss_fn):
 
 
 def test(args, model, dataloader, setting):
-    if args.model in ("XGB", "CatReg"):
+    if args.model == "XGB":
         predicts = model.predict(dataloader["test"])
         return predicts
 

@@ -10,9 +10,25 @@ from src.data import text_data_load, text_data_split, text_data_loader
 from src.data import custom_data_load, custom_data_split, custom_data_loader
 from src.train import train, test
 
+import wandb
+import random
+
 
 def main(args):
     Setting.seed_everything(args.seed)
+
+    # start a new wandb run to track this script
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project="level1_bookratingprediction-recsys-14",
+        # track hyperparameters and run metadata
+        config={
+            "learning_rate": args.lr,
+            "architecture": args.model,
+            "epochs": args.epochs,
+            "batch_size": args.batch_size,
+        },
+    )
 
     ######################## DATA LOAD
     print(f"--------------- {args.model} Load Data ---------------")
@@ -27,7 +43,7 @@ def main(args):
 
         nltk.download("punkt")
         data = text_data_load(args)
-    elif args.model in ("XGB", "CatReg"):
+    elif args.model == "XGB":
         data = custom_data_load(args)
     else:
         pass
@@ -46,7 +62,7 @@ def main(args):
     elif args.model == "DeepCoNN":
         data = text_data_split(args, data)
 
-    elif args.model in ("XGB", "CatReg"):
+    elif args.model == "XGB":
         data = custom_data_split(args, data)
 
     else:
